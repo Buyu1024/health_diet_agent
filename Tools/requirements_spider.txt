@@ -1,0 +1,2 @@
+# nutridata.cn 爬虫依赖
+playwright>=1.40.0

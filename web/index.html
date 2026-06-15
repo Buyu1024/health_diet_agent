@@ -1,0 +1,1248 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>智能健康饮食助手</title>
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        body {
+            font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', 'PingFang SC', 'Microsoft YaHei', sans-serif;
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            min-height: 100vh;
+            padding: 20px;
+        }
+
+        .container {
+            max-width: 1200px;
+            margin: 0 auto;
+        }
+
+        .header {
+            text-align: center;
+            color: white;
+            margin-bottom: 30px;
+        }
+
+        .header h1 {
+            font-size: 2.5em;
+            margin-bottom: 10px;
+            text-shadow: 2px 2px 4px rgba(0,0,0,0.2);
+        }
+
+        .header p {
+            font-size: 1.1em;
+            opacity: 0.9;
+        }
+
+        /* 标签页导航 */
+        .tab-nav {
+            display: flex;
+            gap: 10px;
+            margin-bottom: 20px;
+            background: white;
+            padding: 15px;
+            border-radius: 15px;
+            box-shadow: 0 10px 30px rgba(0,0,0,0.2);
+        }
+
+        .tab-btn {
+            flex: 1;
+            padding: 12px 20px;
+            background: #f0f0f0;
+            border: none;
+            border-radius: 10px;
+            cursor: pointer;
+            font-size: 1em;
+            font-weight: 500;
+            transition: all 0.3s;
+        }
+
+        .tab-btn:hover {
+            background: #667eea;
+            color: white;
+        }
+
+        .tab-btn.active {
+            background: #667eea;
+            color: white;
+            box-shadow: 0 4px 12px rgba(102, 126, 234, 0.4);
+        }
+
+        .tab-content {
+            display: none;
+        }
+
+        .tab-content.active {
+            display: block;
+        }
+
+        /* 标签页内容卡片 */
+        .tab-card {
+            background: white;
+            border-radius: 15px;
+            padding: 25px;
+            box-shadow: 0 10px 30px rgba(0,0,0,0.2);
+        }
+
+        .tab-card h2 {
+            color: #667eea;
+            margin-bottom: 20px;
+            font-size: 1.5em;
+            border-bottom: 2px solid #667eea;
+            padding-bottom: 10px;
+        }
+
+        .profile-layout {
+            display: grid;
+            grid-template-columns: 1fr 1fr;
+            gap: 20px;
+        }
+
+        @media (max-width: 768px) {
+            .profile-layout {
+                grid-template-columns: 1fr;
+            }
+        }
+
+        .card {
+            background: white;
+            border-radius: 15px;
+            padding: 25px;
+            box-shadow: 0 10px 30px rgba(0,0,0,0.2);
+        }
+
+        .card h2 {
+            color: #667eea;
+            margin-bottom: 20px;
+            font-size: 1.5em;
+            border-bottom: 2px solid #667eea;
+            padding-bottom: 10px;
+        }
+
+        .chat-container {
+            height: 500px;
+            display: flex;
+            flex-direction: column;
+        }
+
+        .chat-messages {
+            flex: 1;
+            overflow-y: auto;
+            padding: 15px;
+            background: #f8f9fa;
+            border-radius: 10px;
+            margin-bottom: 15px;
+        }
+
+        .message {
+            margin-bottom: 15px;
+            padding: 12px 15px;
+            border-radius: 10px;
+            line-height: 1.6;
+        }
+
+        .message.user {
+            background: #667eea;
+            color: white;
+            margin-left: 50px;
+        }
+
+        .message.assistant {
+            background: white;
+            border: 1px solid #e0e0e0;
+            margin-right: 50px;
+        }
+
+        .message.assistant.info-request {
+            background: #fff8e1;
+            border-left: 4px solid #ffc107;
+        }
+
+        .profile-sidebar {
+            background: #f0f4ff;
+            border-radius: 10px;
+            padding: 15px;
+            margin-top: 15px;
+            border: 1px solid #d0d9ff;
+        }
+
+        .profile-sidebar h3 {
+            color: #667eea;
+            font-size: 1em;
+            margin-bottom: 10px;
+        }
+
+        .profile-field {
+            display: flex;
+            justify-content: space-between;
+            padding: 6px 0;
+            border-bottom: 1px dashed #e0e0e0;
+            font-size: 0.9em;
+        }
+
+        .profile-field .field-label {
+            color: #666;
+        }
+
+        .profile-field .field-value {
+            font-weight: 500;
+            color: #333;
+        }
+
+        .profile-field .field-value.missing {
+            color: #e74c3c;
+            font-style: italic;
+        }
+
+        .profile-field .field-value.filled {
+            color: #27ae60;
+        }
+
+        .profile-form {
+            background: #fff8e1;
+            border: 1px solid #ffc107;
+            border-radius: 10px;
+            padding: 15px;
+            margin-top: 10px;
+        }
+
+        .profile-form h4 {
+            color: #e67e22;
+            margin-bottom: 12px;
+            font-size: 1em;
+        }
+
+        .form-row {
+            display: flex;
+            gap: 10px;
+            margin-bottom: 10px;
+            flex-wrap: wrap;
+        }
+
+        .form-group {
+            flex: 1;
+            min-width: 120px;
+        }
+
+        .form-group label {
+            display: block;
+            font-size: 0.85em;
+            color: #666;
+            margin-bottom: 4px;
+        }
+
+        .form-group input, .form-group select {
+            width: 100%;
+            padding: 8px 10px;
+            border: 1px solid #ddd;
+            border-radius: 6px;
+            font-size: 0.95em;
+        }
+
+        .form-group input:focus, .form-group select:focus {
+            outline: none;
+            border-color: #667eea;
+        }
+
+        .profile-form .btn {
+            margin-top: 10px;
+            width: 100%;
+            background: #e67e22;
+        }
+
+        .profile-form .btn:hover {
+            background: #d35400;
+        }
+
+        .profile-bmi {
+            background: #e8f5e9;
+            border-radius: 8px;
+            padding: 10px;
+            margin-top: 10px;
+            text-align: center;
+            font-size: 0.9em;
+        }
+
+        .profile-bmi strong {
+            color: #27ae60;
+            font-size: 1.2em;
+        }
+
+        .message.assistant.info-request {
+            background: #fff3cd;
+            border-color: #ffc107;
+        }
+
+        .profile-summary {
+            background: #e7f3ff;
+            border-left: 4px solid #667eea;
+            padding: 10px 15px;
+            margin: 10px 0;
+            border-radius: 5px;
+            font-size: 0.9em;
+        }
+
+        .missing-fields {
+            background: #fff3cd;
+            border-left: 4px solid #ffc107;
+            padding: 10px 15px;
+            margin: 10px 0;
+            border-radius: 5px;
+        }
+
+        .missing-fields ul {
+            margin: 5px 0;
+            padding-left: 20px;
+        }
+
+        .input-group {
+            display: flex;
+            gap: 10px;
+        }
+
+        .input-group input {
+            flex: 1;
+            padding: 12px 15px;
+            border: 2px solid #e0e0e0;
+            border-radius: 8px;
+            font-size: 1em;
+            transition: border-color 0.3s;
+        }
+
+        .input-group input:focus {
+            outline: none;
+            border-color: #667eea;
+        }
+
+        .btn {
+            padding: 12px 25px;
+            background: #667eea;
+            color: white;
+            border: none;
+            border-radius: 8px;
+            cursor: pointer;
+            font-size: 1em;
+            font-weight: 500;
+            transition: all 0.3s;
+        }
+
+        .btn:hover {
+            background: #5568d3;
+            transform: translateY(-2px);
+            box-shadow: 0 5px 15px rgba(102, 126, 234, 0.4);
+        }
+
+        .btn:disabled {
+            background: #ccc;
+            cursor: not-allowed;
+            transform: none;
+        }
+
+        .quick-tags {
+            display: flex;
+            flex-wrap: wrap;
+            gap: 10px;
+            margin-top: 15px;
+        }
+
+        .tag {
+            padding: 8px 15px;
+            background: #f0f0f0;
+            border-radius: 20px;
+            cursor: pointer;
+            transition: all 0.3s;
+            font-size: 0.9em;
+        }
+
+        .tag:hover {
+            background: #667eea;
+            color: white;
+        }
+
+        /* 意图模式选择器 */
+        .intent-selector {
+            display: flex;
+            gap: 8px;
+            margin-bottom: 12px;
+        }
+
+        .intent-btn {
+            flex: 1;
+            padding: 10px 16px;
+            border: 2px solid #e0e0e0;
+            background: #f8f9fa;
+            border-radius: 10px;
+            cursor: pointer;
+            font-size: 0.95em;
+            font-weight: 500;
+            transition: all 0.3s;
+            text-align: center;
+        }
+
+        .intent-btn:hover {
+            border-color: #667eea;
+            background: #eef1ff;
+        }
+
+        .intent-btn.active {
+            border-color: #667eea;
+            background: #667eea;
+            color: white;
+            box-shadow: 0 4px 12px rgba(102, 126, 234, 0.3);
+        }
+
+        .recipe-search {
+            display: flex;
+            gap: 10px;
+            margin-bottom: 15px;
+        }
+
+        .recipe-search input {
+            flex: 1;
+            padding: 10px 15px;
+            border: 2px solid #e0e0e0;
+            border-radius: 8px;
+            font-size: 1em;
+        }
+
+        .recipe-list {
+            max-height: 400px;
+            overflow-y: auto;
+        }
+
+        .recipe-item {
+            padding: 15px;
+            border: 1px solid #e0e0e0;
+            border-radius: 8px;
+            margin-bottom: 10px;
+            cursor: pointer;
+            transition: all 0.3s;
+        }
+
+        .recipe-item:hover {
+            border-color: #667eea;
+            background: #f8f9ff;
+        }
+
+        .recipe-item h3 {
+            color: #333;
+            margin-bottom: 8px;
+        }
+
+        .recipe-item .nutrition {
+            display: grid;
+            grid-template-columns: repeat(3, 1fr);
+            gap: 5px;
+            font-size: 0.85em;
+            color: #666;
+        }
+
+        .nutrition-item {
+            background: #f0f0f0;
+            padding: 5px 8px;
+            border-radius: 5px;
+        }
+
+        .status-bar {
+            background: white;
+            border-radius: 15px;
+            padding: 20px 25px;
+            box-shadow: 0 10px 30px rgba(0,0,0,0.2);
+            margin-bottom: 20px;
+        }
+
+        .status-grid {
+            display: grid;
+            grid-template-columns: repeat(4, 1fr);
+            gap: 15px;
+        }
+
+        .status-item {
+            text-align: center;
+            padding: 15px;
+            background: #f8f9fa;
+            border-radius: 10px;
+        }
+
+        .status-item .label {
+            font-size: 0.9em;
+            color: #666;
+            margin-bottom: 5px;
+        }
+
+        .status-item .value {
+            font-size: 1.5em;
+            font-weight: bold;
+            color: #667eea;
+        }
+
+        .loading {
+            display: inline-block;
+            width: 20px;
+            height: 20px;
+            border: 3px solid #f3f3f3;
+            border-top: 3px solid #667eea;
+            border-radius: 50%;
+            animation: spin 1s linear infinite;
+        }
+
+        @keyframes spin {
+            0% { transform: rotate(0deg); }
+            100% { transform: rotate(360deg); }
+        }
+
+        .error {
+            color: #e74c3c;
+            background: #ffeaea;
+            padding: 10px;
+            border-radius: 5px;
+            margin-top: 10px;
+        }
+
+        @media (max-width: 768px) {
+            .profile-layout {
+                grid-template-columns: 1fr;
+            }
+            .status-grid {
+                grid-template-columns: repeat(2, 1fr);
+            }
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <div class="header">
+            <h1> 智能健康饮食助手</h1>
+            <p>基于 AI 与专业营养数据库，为您提供个性化饮食建议</p>
+        </div>
+
+        <div class="status-bar">
+            <div class="status-grid">
+                <div class="status-item">
+                    <div class="label">Agent A</div>
+                    <div class="value" id="agent-a-status">加载中...</div>
+                </div>
+                <div class="status-item">
+                    <div class="label">Agent B</div>
+                    <div class="value" id="agent-b-status">加载中...</div>
+                </div>
+                <div class="status-item">
+                    <div class="label">食谱数据库</div>
+                    <div class="value" id="recipe-count">加载中...</div>
+                </div>
+                <div class="status-item">
+                    <div class="label">MCP 工具</div>
+                    <div class="value" id="mcp-tools">加载中...</div>
+                </div>
+            </div>
+        </div>
+
+        <!-- 标签页导航 -->
+        <div class="tab-nav">
+            <button class="tab-btn active" onclick="switchTab('chat')">💬 智能对话</button>
+            <button class="tab-btn" onclick="switchTab('profile')">👤 个人中心</button>
+            <button class="tab-btn" onclick="switchTab('recipe')">🍽️ 食谱查询</button>
+        </div>
+
+        <!-- Tab 1: 智能对话 -->
+        <div class="tab-content active" id="tab-chat">
+            <div class="tab-card">
+                <h2>💬 智能对话</h2>
+                <div class="chat-container">
+                    <div class="chat-messages" id="chat-messages">
+                        <div class="message assistant">
+                            您好！我是您的智能健康饮食助手，会自动理解您的需求：<br><br>
+                            🧠 <strong>智能识别</strong>（默认）：直接说您的需求，我会自动判断是配餐还是查询<br>
+                            🍽️ <strong>配餐推荐</strong>：根据您的个人指标，为您生成一日三餐方案<br>
+                            🔍 <strong>食谱查询</strong>：搜索特定食谱的营养成分详情<br><br>
+                            使用前请先在"个人中心"标签页填写您的身体指标。
+                        </div>
+                    </div>
+                    <div id="profile-form-container" style="display: none;"></div>
+                    <!-- 意图选择器 -->
+                    <div class="intent-selector">
+                        <button class="intent-btn active" id="intent-auto" onclick="selectIntent('auto')">
+                            🧠 智能识别
+                        </button>
+                        <button class="intent-btn" id="intent-meal-plan" onclick="selectIntent('meal_plan')">
+                            🍽️ 配餐推荐
+                        </button>
+                        <button class="intent-btn" id="intent-recipe-query" onclick="selectIntent('recipe_query')">
+                            🔍 食谱查询
+                        </button>
+                    </div>
+                    <div class="input-group">
+                        <input type="text" id="user-input" placeholder="直接说您的需求，我会自动理解，如&quot;我有高血压推荐三餐&quot;或&quot;宫保鸡丁热量多少&quot;..." 
+                               onkeypress="if(event.key==='Enter') sendMessage()">
+                        <button class="btn" onclick="sendMessage()" id="send-btn">发送</button>
+                    </div>
+                    <div class="quick-tags" id="quick-tags-meal-plan">
+                        <span class="tag" onclick="switchTab('profile')">📝 填写个人信息</span>
+                        <span class="tag" onclick="clearHistory()" style="background: #ffebee; color: #c62828;">🗑️ 清除历史记录</span>
+                        <span class="tag" onclick="quickAsk('我有高血压，推荐食谱')">高血压</span>
+                        <span class="tag" onclick="quickAsk('我有糖尿病，推荐饮食')">糖尿病</span>
+                        <span class="tag" onclick="quickAsk('我有高血脂，推荐食谱')">高血脂</span>
+                        <span class="tag" onclick="quickAsk('我有痛风，推荐饮食')">痛风</span>
+                        <span class="tag" onclick="quickAsk('我想减肥，推荐食谱')">减肥</span>
+                        <span class="tag" onclick="quickAsk('查一下宫保鸡丁的热量')">宫保鸡丁</span>
+                        <span class="tag" onclick="quickAsk('番茄炒蛋的营养成分')">番茄炒蛋</span>
+                    </div>
+                    <div class="quick-tags" id="quick-tags-recipe-query" style="display: none;">
+                        <span class="tag" onclick="quickAsk('番茄炒蛋的营养成分是什么')">番茄炒蛋</span>
+                        <span class="tag" onclick="quickAsk('查一下宫保鸡丁的热量')">宫保鸡丁</span>
+                        <span class="tag" onclick="quickAsk('搜索鸡蛋相关的食谱')">鸡蛋</span>
+                        <span class="tag" onclick="quickAsk('红烧肉的蛋白质含量是多少')">红烧肉</span>
+                        <span class="tag" onclick="quickAsk('有没有低卡路里的食谱')">低卡路里</span>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <!-- Tab 2: 个人中心 -->
+        <div class="tab-content" id="tab-profile">
+            <div class="tab-card">
+                <h2>👤 个人中心</h2>
+                <div class="profile-layout">
+                    <div>
+                        <h3 style="color:#667eea;margin-bottom:15px;">📊 个人指标</h3>
+                        <div class="profile-sidebar" id="profile-display">
+                            <div class="profile-field">
+                                <span class="field-label">身高</span>
+                                <span class="field-value missing" id="pf-height">未填写</span>
+                            </div>
+                            <div class="profile-field">
+                                <span class="field-label">体重</span>
+                                <span class="field-value missing" id="pf-weight">未填写</span>
+                            </div>
+                            <div class="profile-field">
+                                <span class="field-label">年龄</span>
+                                <span class="field-value missing" id="pf-age">未填写</span>
+                            </div>
+                            <div class="profile-field">
+                                <span class="field-label">性别</span>
+                                <span class="field-value missing" id="pf-gender">未填写</span>
+                            </div>
+                            <div class="profile-field">
+                                <span class="field-label">活动量</span>
+                                <span class="field-value" id="pf-activity">中度活动</span>
+                            </div>
+                            <div class="profile-field">
+                                <span class="field-label">健康状况</span>
+                                <span class="field-value" id="pf-condition">-</span>
+                            </div>
+                            <div id="profile-bmi-section" style="display: none;">
+                                <div class="profile-bmi">
+                                    BMI: <strong id="pf-bmi">-</strong> &nbsp;|&nbsp; 
+                                    每日建议: <strong id="pf-calories">-</strong> kcal
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                    <div>
+                        <h3 style="color:#e67e22;margin-bottom:15px;">✏️ 填写/修改信息</h3>
+                        <div id="manual-form-container"></div>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <!-- Tab 3: 食谱查询 -->
+        <div class="tab-content" id="tab-recipe">
+            <div class="tab-card">
+                <h2>🍽️ 食谱查询</h2>
+                <div class="recipe-search">
+                    <input type="text" id="recipe-keyword" placeholder="搜索食谱名称，如'番茄'、'鸡蛋'..." 
+                           onkeypress="if(event.key==='Enter') searchRecipe()">
+                    <button class="btn" onclick="searchRecipe()">搜索</button>
+                </div>
+                <div class="recipe-list" id="recipe-list">
+                    <div style="text-align: center; color: #999; padding: 50px;">
+                        搜索食谱以查看详情
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <script>
+        const API_BASE = 'http://localhost:8000';
+        let sessionId = null;
+        let currentIntent = null; // null=自动识别（LLM分类）
+        
+        // 意图选择
+        function selectIntent(intent) {
+            document.querySelectorAll('.intent-btn').forEach(btn => btn.classList.remove('active'));
+            const btnId = 'intent-' + intent.replace('_', '-');
+            document.getElementById(btnId).classList.add('active');
+        
+            const input = document.getElementById('user-input');
+            const tagsMealPlan = document.getElementById('quick-tags-meal-plan');
+            const tagsRecipeQuery = document.getElementById('quick-tags-recipe-query');
+        
+            if (intent === 'auto') {
+                currentIntent = null; // 发给后端null，由LLM分类
+                input.placeholder = '直接说您的需求，我会自动理解，如"我有高血压推荐三餐"或"宫保鸡丁热量多少"...';
+                tagsMealPlan.style.display = 'flex';
+                tagsRecipeQuery.style.display = 'none';
+            } else if (intent === 'meal_plan') {
+                currentIntent = 'meal_plan';
+                input.placeholder = '描述您的饮食需求，如"我有高血压，推荐一日三餐"...';
+                tagsMealPlan.style.display = 'flex';
+                tagsRecipeQuery.style.display = 'none';
+            } else {
+                currentIntent = 'recipe_query';
+                input.placeholder = '输入食谱名称查询营养，如"番茄炒蛋"、"宫保鸡丁"...';
+                tagsMealPlan.style.display = 'none';
+                tagsRecipeQuery.style.display = 'flex';
+            }
+            input.focus();
+        }
+
+        // 标签页切换
+        function switchTab(tabName) {
+            document.querySelectorAll('.tab-btn').forEach(btn => btn.classList.remove('active'));
+            document.querySelectorAll('.tab-content').forEach(content => content.classList.remove('active'));
+            document.getElementById('tab-' + tabName).classList.add('active');
+            // 激活对应按钮
+            const btns = document.querySelectorAll('.tab-btn');
+            const tabIndex = {chat: 0, profile: 1, recipe: 2};
+            if (btns[tabIndex[tabName]]) btns[tabIndex[tabName]].classList.add('active');
+            // 切换到个人中心时自动显示表单
+            if (tabName === 'profile') {
+                showManualForm();
+            }
+        }
+
+        // 初始化
+        async function init() {
+            await loadStatus();
+            showManualForm();
+            document.getElementById('user-input').focus();
+        }
+
+        // 加载系统状态
+        async function loadStatus() {
+            try {
+                const response = await fetch(`${API_BASE}/api/agents/status`);
+                const data = await response.json();
+                
+                document.getElementById('agent-a-status').textContent = data.agent_a?.id || '未初始化';
+                document.getElementById('agent-b-status').textContent = data.agent_b?.id || '未初始化';
+                document.getElementById('recipe-count').textContent = '22489';
+                document.getElementById('mcp-tools').textContent = data.agent_b?.mcp_tools_count || 0;
+            } catch (error) {
+                console.error('加载状态失败:', error);
+            }
+        }
+
+        // 发送消息
+        async function sendMessage() {
+            const input = document.getElementById('user-input');
+            const message = input.value.trim();
+            if (!message) return;
+
+            // 检测是否尝试通过文本输入个人信息
+            const hasPersonalInfo = /身高\s*\d+|体重\s*\d+|\d+\s*岁|\d+\s*cm|\d+\s*kg/i.test(message);
+            if (hasPersonalInfo && !message.includes('推荐') && !message.includes('食谱') && !message.includes('高血压') && !message.includes('糖尿病')) {
+                addMessage('️ 为了准确获取您的个人信息，请使用个人中心页面填写。<br><br>👉 点击上方"👤 个人中心"标签页，在表单中输入您的身高、体重、年龄等信息。', 'assistant');
+                switchTab('profile');
+                input.value = '';
+                return;
+            }
+
+            const sendBtn = document.getElementById('send-btn');
+            sendBtn.disabled = true;
+            sendBtn.innerHTML = '<span class="loading"></span>';
+
+            addMessage(message, 'user');
+            input.value = '';
+
+            try {
+                const response = await fetch(`${API_BASE}/api/chat`, {
+                    method: 'POST',
+                    headers: {
+                        'Content-Type': 'application/json',
+                    },
+                    body: JSON.stringify({
+                        message: message,
+                        session_id: sessionId,
+                        intent: currentIntent
+                    })
+                });
+
+                const data = await response.json();
+                
+                if (data.response) {
+                    sessionId = data.session_id;
+
+                    // 检查是否需要补充个人信息
+                    if (data.a2a_trace?.need_more_info) {
+                        addMessage(data.response || '请补充以下信息以生成个性化推荐', 'assistant', 'info-request');
+                        showProfileForm(data.a2a_trace.missing_fields || [], data.a2a_trace.profile || {});
+                        updateProfileSidebar(data.a2a_trace.profile || {});
+                    } else {
+                        // 检查是否有一日三餐数据
+                        if (data.a2a_trace?.meal_plan) {
+                            // 显示LLM解读摘要(在"【早餐】"之前的文本)
+                            if (data.response) {
+                                const text = data.response;
+                                const mealStart = text.indexOf('【早餐】');
+                                const summaryText = mealStart > 0 ? text.substring(0, mealStart).trim() : '';
+                                if (summaryText) addMessage(summaryText, 'assistant');
+                            }
+                            addMealPlanMessage(data.a2a_trace.meal_plan, data.a2a_trace.profile || {}, data.a2a_trace.nutrition_analysis, data.a2a_trace.llm_analysis);
+                        } else {
+                            addMessage(data.response, 'assistant');
+                        }
+                        if (data.a2a_trace?.profile) {
+                            updateProfileSidebar(data.a2a_trace.profile);
+                        }
+                        hideProfileForm();
+                    }
+                } else if (data.detail) {
+                    addMessage('错误: ' + data.detail, 'assistant');
+                }
+            } catch (error) {
+                addMessage('请求失败: ' + error.message, 'assistant');
+            } finally {
+                sendBtn.disabled = false;
+                sendBtn.textContent = '发送';
+            }
+        }
+
+        // 显示个人信息收集表单
+        function showProfileForm(missingFields, profile, targetContainer = 'profile-form-container') {
+            const container = document.getElementById(targetContainer);
+            if (!container || !missingFields || missingFields.length === 0) {
+                if (container) container.style.display = 'none';
+                return;
+            }
+
+            let html = '<div class="profile-form"><h4>📝 请补充以下信息</h4><div class="form-row">';
+            
+            const allFields = [
+                {field: '身高', key: 'height', unit: 'cm', type: 'number'},
+                {field: '体重', key: 'weight', unit: 'kg', type: 'number'},
+                {field: '年龄', key: 'age', unit: '岁', type: 'number'},
+                {field: '性别', key: 'gender', unit: '', type: 'enum'},
+            ];
+
+            // 显示所有字段,已填的预填充,未填的高亮
+            const missingKeys = missingFields.map(f => f.field);
+                        
+            allFields.forEach(f => {
+                const isMissing = missingKeys.includes(f.field);
+                const value = profile[f.key];
+                // 处理 value 为 0、null、undefined 的情况
+                const displayValue = (value !== null && value !== undefined && value !== '') ? value : '';
+                html += `<div class="form-group">`;
+                html += `<label>${f.field}${f.unit ? '(' + f.unit + ')' : ''}${isMissing ? ' <span style="color:red">*</span>' : ''}</label>`;
+                            
+                if (f.type === 'enum' && f.field === '性别') {
+                    html += `<select id="form-${f.key}">`;
+                    html += `<option value="">请选择</option>`;
+                    html += `<option value="男" ${displayValue === '男' ? 'selected' : ''}>男</option>`;
+                    html += `<option value="女" ${displayValue === '女' ? 'selected' : ''}>女</option>`;
+                    html += `</select>`;
+                } else {
+                    html += `<input type="${f.type}" id="form-${f.key}" value="${displayValue}" placeholder="${f.field}">`;
+                }
+                html += `</div>`;
+            });
+
+            html += '</div>';
+            html += `<button class="btn" onclick="submitProfileForm()">提交个人信息</button>`;
+            html += '</div>';
+            
+            container.innerHTML = html;
+            container.style.display = 'block';
+        }
+
+        // 提交个人信息表单
+        function submitProfileForm() {
+            const height = document.getElementById('form-height')?.value || '';
+            const weight = document.getElementById('form-weight')?.value || '';
+            const age = document.getElementById('form-age')?.value || '';
+            const gender = document.getElementById('form-gender')?.value || '';
+
+            let parts = [];
+            if (height) parts.push(`身高${height}cm`);
+            if (weight) parts.push(`体重${weight}kg`);
+            if (age) parts.push(`${age}岁`);
+            if (gender) parts.push(gender);
+
+            if (parts.length === 0) {
+                alert('请至少填写一项信息');
+                return;
+            }
+
+            // 隐藏所有表单
+            hideProfileForm();
+
+            const message = parts.join('，') + '，推荐饮食';
+            document.getElementById('user-input').value = message;
+            // 切换到对话页并发送消息
+            switchTab('chat');
+            sendMessage();
+        }
+
+        // 显示手动填写表单
+        function showManualForm() {
+            const container = document.getElementById('manual-form-container');
+            if (!container) return;
+            showProfileForm(
+                [{field: '身高'}, {field: '体重'}, {field: '年龄'}, {field: '性别'}],
+                getCurrentProfile(),
+                'manual-form-container'
+            );
+        }
+
+        // 获取当前指标
+        function getCurrentProfile() {
+            return {
+                height: parseFloat(document.getElementById('pf-height').textContent) || null,
+                weight: parseFloat(document.getElementById('pf-weight').textContent) || null,
+                age: parseInt(document.getElementById('pf-age').textContent) || null,
+                gender: document.getElementById('pf-gender').textContent === '未填写' ? null : document.getElementById('pf-gender').textContent,
+            };
+        }
+
+        // 更新个人指标侧边栏
+        function updateProfileSidebar(profile) {
+            if (!profile) return;
+
+            const fields = {
+                'pf-height': {val: profile.height, unit: ' cm'},
+                'pf-weight': {val: profile.weight, unit: ' kg'},
+                'pf-age': {val: profile.age, unit: ' 岁'},
+                'pf-gender': {val: profile.gender, unit: ''},
+                'pf-activity': {val: profile.activity_level, unit: ''},
+                'pf-condition': {val: profile.health_condition, unit: ''},
+            };
+
+            for (const [id, data] of Object.entries(fields)) {
+                const el = document.getElementById(id);
+                if (!el) continue;
+                // 检查值是否有效（不为 null、undefined、空字符串、0）
+                if (data.val !== null && data.val !== undefined && data.val !== '' && data.val !== 0) {
+                    el.textContent = data.val + data.unit;
+                    el.className = 'field-value filled';
+                } else {
+                    el.textContent = '未填写';
+                    el.className = 'field-value missing';
+                }
+            }
+
+            // BMI 计算结果
+            const bmiSection = document.getElementById('profile-bmi-section');
+            if (profile.bmi && profile.bmi > 0) {
+                bmiSection.style.display = 'block';
+                document.getElementById('pf-bmi').textContent = profile.bmi;
+            } else {
+                bmiSection.style.display = 'none';
+            }
+            
+            if (profile.daily_calories && profile.daily_calories > 0) {
+                bmiSection.style.display = 'block';
+                document.getElementById('pf-calories').textContent = Math.round(profile.daily_calories);
+            }
+        }
+
+        // 隐藏个人信息表单
+        function hideProfileForm() {
+            const pf = document.getElementById('profile-form-container');
+            if (pf) pf.style.display = 'none';
+            const mf = document.getElementById('manual-form-container');
+            if (mf) mf.innerHTML = '';
+        }
+
+        // 快速提问
+        function quickAsk(question) {
+            document.getElementById('user-input').value = question;
+            sendMessage();
+        }
+
+        // 添加消息到聊天窗口
+        function addMessage(text, type, extraClass = '') {
+            const container = document.getElementById('chat-messages');
+            const messageDiv = document.createElement('div');
+            messageDiv.className = `message ${type} ${extraClass}`;
+            messageDiv.innerHTML = text.replace(/\n/g, '<br>');
+            container.appendChild(messageDiv);
+            container.scrollTop = container.scrollHeight;
+        }
+
+        // 添加一日三餐结构化消息
+        function addMealPlanMessage(mealPlan, profile, nutritionAnalysis, llmAnalysis) {
+            const container = document.getElementById('chat-messages');
+            const messageDiv = document.createElement('div');
+            messageDiv.className = 'message assistant';
+            
+            const mealLabels = {breakfast: '🌅 早餐', lunch: '☀️ 午餐', dinner: '🌙 晚餐'};
+            const mealColors = {breakfast: '#e3f2fd', lunch: '#fff3e0', dinner: '#f3e5f5'};
+            
+            let html = '';
+            
+            // 用户信息摘要
+            if (profile.bmi) {
+                html += `<div style="background:#e8f5e9;padding:10px;border-radius:8px;margin-bottom:12px;font-size:0.9em;">`;
+                html += `<strong>📊 个人指标:</strong> BMI ${profile.bmi} | 每日建议摄入 ${Math.round(profile.daily_calories || 0)} kcal`;
+                html += `</div>`;
+            }
+            
+            // 三餐数据
+            for (const [mealKey, mealLabel] of Object.entries(mealLabels)) {
+                const mealData = mealPlan[mealKey];
+                if (!mealData || !mealData.recipes || mealData.recipes.length === 0) continue;
+                
+                const recipes = mealData.recipes;
+                const target = mealData.target || {};
+                const mealCal = recipes.reduce((sum, r) => sum + (r.nutrients?.calorie?.value || 0), 0);
+                
+                html += `<div style="background:${mealColors[mealKey]};padding:12px;border-radius:10px;margin-bottom:10px;">`;
+                html += `<div style="font-weight:bold;font-size:1.1em;margin-bottom:8px;">${mealLabel}`;
+                html += ` <span style="font-size:0.8em;color:#666;">(目标${Math.round(target.calorie || 0)}kcal，实际${Math.round(mealCal)}kcal)</span></div>`;
+                
+                for (const recipe of recipes) {
+                    const n = recipe.nutrients || {};
+                    const cal = n.calorie?.value;
+                    const pro = n.protein?.value;
+                    const fat = n.fat?.value;
+                    const carb = n.carbohydrate?.value;
+                    const sod = n.sodium?.value;
+                    
+                    html += `<div style="background:white;padding:8px 12px;border-radius:6px;margin-bottom:6px;font-size:0.9em;">`;
+                    html += `<strong>${recipe.recipe_name}</strong>`;
+                    html += `<div style="display:flex;flex-wrap:wrap;gap:8px;margin-top:4px;color:#666;">`;
+                    if (cal !== null && cal !== undefined) html += `<span>🔥${cal}${n.calorie?.unit || 'kcal'}</span>`;
+                    if (pro !== null && pro !== undefined) html += `<span>🥩${pro}g</span>`;
+                    if (fat !== null && fat !== undefined) html += `<span>🧈${fat}g</span>`;
+                    if (carb !== null && carb !== undefined) html += `<span>🍚${carb}g</span>`;
+                    if (sod !== null && sod !== undefined) html += `<span>🧂${sod}mg</span>`;
+                    html += `</div></div>`;
+                }
+                html += `</div>`;
+            }
+            
+            // 全天总计
+            const dailyTotal = mealPlan.daily_total;
+            const dailyTarget = mealPlan.daily_target;
+            if (dailyTotal) {
+                html += `<div style="background:#e0e0e0;padding:12px;border-radius:10px;margin-bottom:10px;">`;
+                html += `<div style="font-weight:bold;margin-bottom:6px;">📊 全天总计</div>`;
+                html += `<div style="display:flex;flex-wrap:wrap;gap:12px;font-size:0.9em;">`;
+                html += `<span>🔥热量: ${Math.round(dailyTotal.calorie || 0)}kcal <small>(目标${Math.round(dailyTarget?.calorie || 0)})</small></span>`;
+                html += `<span>🥩蛋白质: ${Math.round((dailyTotal.protein || 0) * 10) / 10}g <small>(目标${dailyTarget?.protein || 0}g)</small></span>`;
+                html += `<span>🧈脂肪: ${Math.round((dailyTotal.fat || 0) * 10) / 10}g <small>(目标${dailyTarget?.fat || 0}g)</small></span>`;
+                html += `<span>🍚碳水: ${Math.round((dailyTotal.carbohydrate || 0) * 10) / 10}g <small>(目标${dailyTarget?.carbohydrate || 0}g)</small></span>`;
+                html += `<span>🧂钠: ${Math.round(dailyTotal.sodium || 0)}mg</span>`;
+                html += `</div></div>`;
+            }
+            
+            // 营养合规性分析
+            if (nutritionAnalysis) {
+                const total = nutritionAnalysis.total || 0;
+                const compliant = nutritionAnalysis.compliant_count || 0;
+                const nonCompliant = nutritionAnalysis.non_compliant_count || 0;
+                const analysisList = nutritionAnalysis.analysis || [];
+                
+                if (nonCompliant > 0) {
+                    html += `<div style="background:#fff3cd;border-left:4px solid #ffc107;padding:12px;border-radius:10px;margin-bottom:10px;">`;
+                    html += `<div style="font-weight:bold;margin-bottom:6px;">⚠️ 营养合规性检查: ${compliant}/${total}个食谱符合约束</div>`;
+                    for (const item of analysisList) {
+                        if (!item.compliant && item.issues) {
+                            for (const issue of item.issues) {
+                                html += `<div style="font-size:0.85em;color:#856404;padding:2px 0;">⚠ ${item.recipe_name}: ${issue}</div>`;
+                            }
+                        }
+                    }
+                    html += `</div>`;
+                } else if (total > 0) {
+                    html += `<div style="background:#d4edda;border-left:4px solid #28a745;padding:12px;border-radius:10px;margin-bottom:10px;">`;
+                    html += `<div style="font-weight:bold;color:#155724;">✅ 营养合规性检查: 全部${total}个食谱均符合约束</div>`;
+                    html += `</div>`;
+                }
+            }
+            
+            // LLM结构化专业解读
+            if (llmAnalysis) {
+                // 整体评价
+                if (llmAnalysis.evaluation) {
+                    html += `<div style="background:#e8eaf6;border-left:4px solid #3f51b5;padding:12px;border-radius:10px;margin-bottom:10px;">`;
+                    html += `<div style="font-weight:bold;color:#283593;margin-bottom:6px;">📝 整体评价</div>`;
+                    html += `<div style="font-size:0.9em;color:#333;line-height:1.6;">${llmAnalysis.evaluation}</div>`;
+                    html += `</div>`;
+                }
+                
+                // 专业食用建议
+                const cookingAdvice = llmAnalysis.cooking_advice || [];
+                if (cookingAdvice.length > 0) {
+                    html += `<div style="background:#e0f7fa;border-left:4px solid #00bcd4;padding:12px;border-radius:10px;margin-bottom:10px;">`;
+                    html += `<div style="font-weight:bold;color:#006064;margin-bottom:8px;">💡 专业食用建议</div>`;
+                    for (const item of cookingAdvice) {
+                        html += `<div style="margin-bottom:10px;">`;
+                        html += `<div style="font-weight:600;color:#00838f;margin-bottom:4px;">◆ ${item.category || ''}</div>`;
+                        const suggestions = item.suggestions || [];
+                        for (const sug of suggestions) {
+                            html += `<div style="font-size:0.88em;color:#333;padding:2px 0 2px 16px;">• ${sug}</div>`;
+                        }
+                        if (item.scientific_basis) {
+                            html += `<div style="font-size:0.82em;color:#666;padding:2px 0 2px 16px;font-style:italic;">🧬 依据：${item.scientific_basis}</div>`;
+                        }
+                        html += `</div>`;
+                    }
+                    html += `</div>`;
+                }
+                
+                // 营养不达标项
+                const nutritionGaps = llmAnalysis.nutrition_gaps || [];
+                if (nutritionGaps.length > 0) {
+                    html += `<div style="background:#fff8e1;border-left:4px solid #ff9800;padding:12px;border-radius:10px;margin-bottom:10px;">`;
+                    html += `<div style="font-weight:bold;color:#e65100;margin-bottom:8px;">⚠️ 营养不达标项及补充建议</div>`;
+                    html += `<table style="width:100%;border-collapse:collapse;font-size:0.88em;">`;
+                    html += `<tr style="background:#fff3e0;"><th style="padding:6px 8px;text-align:left;border-bottom:1px solid #ffe0b2;">不足项目</th><th style="padding:6px 8px;text-align:left;border-bottom:1px solid #ffe0b2;">缺口量</th><th style="padding:6px 8px;text-align:left;border-bottom:1px solid #ffe0b2;">推荐补充方式</th><th style="padding:6px 8px;text-align:left;border-bottom:1px solid #ffe0b2;">预期效果</th></tr>`;
+                    for (const gap of nutritionGaps) {
+                        html += `<tr>`;
+                        html += `<td style="padding:6px 8px;border-bottom:1px solid #f5f5f5;font-weight:500;">${gap.nutrient || ''}</td>`;
+                        html += `<td style="padding:6px 8px;border-bottom:1px solid #f5f5f5;color:#d32f2f;">${gap.gap_description || ''}</td>`;
+                        html += `<td style="padding:6px 8px;border-bottom:1px solid #f5f5f5;">${gap.supplement || ''}</td>`;
+                        html += `<td style="padding:6px 8px;border-bottom:1px solid #f5f5f5;color:#388e3c;">${gap.expected_effect || ''}</td>`;
+                        html += `</tr>`;
+                    }
+                    html += `</table></div>`;
+                }
+            }
+            
+            messageDiv.innerHTML = html;
+            container.appendChild(messageDiv);
+            container.scrollTop = container.scrollHeight;
+        }
+
+        // 搜索食谱
+        async function searchRecipe() {
+            const keyword = document.getElementById('recipe-keyword').value.trim();
+            if (!keyword) {
+                alert('请输入搜索关键词');
+                return;
+            }
+
+            const recipeList = document.getElementById('recipe-list');
+            recipeList.innerHTML = '<div style="text-align: center; padding: 20px;"><span class="loading"></span> 搜索中...</div>';
+
+            try {
+                const response = await fetch(`${API_BASE}/api/recipe/search?keyword=${encodeURIComponent(keyword)}&limit=10`);
+                const data = await response.json();
+
+                const recipes = data.data?.recipes || data.recipes || [];
+                
+                if (recipes.length > 0) {
+                    recipeList.innerHTML = '';
+                    recipes.forEach(recipe => {
+                        const item = document.createElement('div');
+                        item.className = 'recipe-item';
+                        item.onclick = () => showRecipeDetail(recipe.recipe_id);
+                        
+                        const nutrients = recipe.nutrients || {};
+                        const cal = nutrients.calorie;
+                        const pro = nutrients.protein;
+                        const fat = nutrients.fat;
+                        const carb = nutrients.carbohydrate;
+                        const sod = nutrients.sodium;
+                        const iron = nutrients.iron;
+                        
+                        item.innerHTML = `
+                            <h3>${recipe.recipe_name}</h3>
+                            <div class="nutrition">
+                                <div class="nutrition-item">热量: ${cal?.value !== null && cal?.value !== undefined ? cal.value + ' ' + (cal.unit || '') : 'N/A'}</div>
+                                <div class="nutrition-item">蛋白质: ${pro?.value !== null && pro?.value !== undefined ? pro.value + ' ' + (pro.unit || '') : 'N/A'}</div>
+                                <div class="nutrition-item">脂肪: ${fat?.value !== null && fat?.value !== undefined ? fat.value + ' ' + (fat.unit || '') : 'N/A'}</div>
+                                <div class="nutrition-item">碳水: ${carb?.value !== null && carb?.value !== undefined ? carb.value + ' ' + (carb.unit || '') : 'N/A'}</div>
+                                <div class="nutrition-item">钠: ${sod?.value !== null && sod?.value !== undefined ? sod.value + ' ' + (sod.unit || '') : 'N/A'}</div>
+                                <div class="nutrition-item">铁: ${iron?.value !== null && iron?.value !== undefined ? iron.value + ' ' + (iron.unit || '') : 'N/A'}</div>
+                            </div>
+                        `;
+                        recipeList.appendChild(item);
+                    });
+                } else {
+                    recipeList.innerHTML = '<div style="text-align: center; color: #999; padding: 50px;">未找到相关食谱</div>';
+                }
+            } catch (error) {
+                recipeList.innerHTML = `<div class="error">搜索失败: ${error.message}</div>`;
+            }
+        }
+
+        // 显示食谱详情
+        async function showRecipeDetail(recipeId) {
+            try {
+                const response = await fetch(`${API_BASE}/api/recipe/${recipeId}/nutrition`);
+                const data = await response.json();
+                
+                const recipe = data.data?.recipe || data.recipe;
+                if (recipe) {
+                    const nutrients = recipe.nutrients || {};
+                    
+                    let detailHtml = `<h3>${recipe.recipe_name}</h3>`;
+                    detailHtml += `<p><strong>配料:</strong> ${recipe.ingredients || 'N/A'}</p>`;
+                    detailHtml += '<div style="margin-top: 15px;"><strong>营养详情:</strong></div>';
+                    detailHtml += '<div style="display: grid; grid-template-columns: repeat(2, 1fr); gap: 8px; margin-top: 10px;">';
+                    
+                    for (const [key, value] of Object.entries(nutrients)) {
+                        if (value && value.value !== null && value.value !== undefined) {
+                            detailHtml += `<div class="nutrition-item">${value.label}: ${value.value} ${value.unit}</div>`;
+                        }
+                    }
+                    
+                    detailHtml += '</div>';
+                    
+                    const recipeList = document.getElementById('recipe-list');
+                    recipeList.innerHTML = detailHtml;
+                }
+            } catch (error) {
+                alert('获取详情失败: ' + error.message);
+            }
+        }
+
+        // 清除历史记录
+        function clearHistory() {
+            if (confirm('确定要清除所有历史记录和个人信息吗？这将重置会话状态。')) {
+                // 1. 清除 session_id
+                sessionId = null;
+                
+                // 2. 清空聊天消息
+                const chatMessages = document.getElementById('chat-messages');
+                chatMessages.innerHTML = '';
+                
+                // 3. 重置个人指标显示
+                document.getElementById('pf-height').textContent = '未填写';
+                document.getElementById('pf-height').className = 'field-value missing';
+                document.getElementById('pf-weight').textContent = '未填写';
+                document.getElementById('pf-weight').className = 'field-value missing';
+                document.getElementById('pf-age').textContent = '未填写';
+                document.getElementById('pf-age').className = 'field-value missing';
+                document.getElementById('pf-gender').textContent = '未填写';
+                document.getElementById('pf-gender').className = 'field-value missing';
+                document.getElementById('pf-activity').textContent = '中度活动';
+                document.getElementById('pf-condition').textContent = '-';
+                document.getElementById('profile-bmi-section').style.display = 'none';
+                
+                // 4. 隐藏表单
+                hideProfileForm();
+                
+                // 5. 添加提示消息
+                addMessage('✅ 历史记录已清除，会话已重置。请重新填写您的个人信息。', 'assistant');
+                
+                console.log('[Clear History] 会话已重置');
+            }
+        }
+
+        // 页面加载完成后初始化
+        window.addEventListener('load', init);
+    </script>
+</body>
+</html>
